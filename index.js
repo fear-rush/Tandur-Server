@@ -5,10 +5,12 @@ const app = express();
 const server = require("http").createServer(app);
 const axios = require("axios");
 const cors = require("cors");
+
 // const circularJSON = require('circular-json');
 app.use(cors({ origin: true, credentials: true }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+require('dotenv').config()
 
 const io = require("socket.io")(server, {
   cors: {
@@ -21,51 +23,6 @@ app.get("/", (req, res) => {
   res.send("Server Running");
 });
 
-// app.get("/livedata", (req, res) => {
-//   axios.get(
-//       "https://platform.antares.id:8443/~/antares-cse/antares-id/Capstonetest/Loratest1?fu=1&ty=4&drt=1",
-//       {
-//         headers: {
-//           "Content-Type": "application/json;ty=4",
-//           Accept: "application/json",
-//           "X-M2M-ORIGIN": "4016d5571c43fcd4:c826c3b6d9d885af",
-//         },
-//       }
-//     )
-//     .then((resp) => {
-//       const response = resp.data["m2m:uril"];
-//       const liveData = response.map((url) => {
-//         const urlData = url
-//           .replace(/['"]+/g, "")
-//           .split("/")[5]
-//           .replace(/_/g, "-");
-//         console.log(`url data ${urlData}`);
-//         return urlData;
-//       });
-
-//       return Promise.all(
-//         liveData.slice(0, 3).map((urlData) => {
-//           return axios.get(
-//             `https://platform.antares.id:8443/~/antares-cse/${urlData}`,
-//             {
-//               headers: {
-//                 "Content-Type": "application/json;ty=4",
-//                 Accept: "application/json",
-//                 "X-M2M-ORIGIN": "4016d5571c43fcd4:c826c3b6d9d885af",
-//               },
-//             }
-//           );
-//         })
-//       );
-//     })
-//     .then((antaresdata) => {
-//       const historicdata = antaresdata.map((el) => {
-//         return el.data;
-//       });
-//       res.send(historicdata);
-//     });
-// });
-
 app.get("/livedata", (req, res) => {
   axios.get(
       "https://platform.antares.id:8443/~/antares-cse/antares-id/Capstonetest/Loratest1?fu=1&ty=4&drt=1",
@@ -73,7 +30,7 @@ app.get("/livedata", (req, res) => {
         headers: {
           "Content-Type": "application/json;ty=4",
           Accept: "application/json",
-          "X-M2M-ORIGIN": "4016d5571c43fcd4:c826c3b6d9d885af",
+          "X-M2M-ORIGIN": process.env.ANTARES_KEY,
         },
       }
     )
@@ -84,7 +41,6 @@ app.get("/livedata", (req, res) => {
           .replace(/['"]+/g, "")
           .split("/")[5]
           .replace(/_/, "-");
-        // console.log(`url data ${urlData}`);
         return urlData;
       });
 
@@ -96,7 +52,7 @@ app.get("/livedata", (req, res) => {
               headers: {
                 "Content-Type": "application/json;ty=4",
                 Accept: "application/json",
-                "X-M2M-ORIGIN": "4016d5571c43fcd4:c826c3b6d9d885af",
+                "X-M2M-ORIGIN": process.env.ANTARES_KEY,
               },
             }
           );
@@ -131,12 +87,12 @@ io.on("connection", (socket) => {
   console.log("User Connected");
   axios
     .get(
-      `https://platform.antares.id:8443/~/antares-cse/antares-id/Capstonetest/testlora/la`,
+      `https://platform.antares.id:8443/~/antares-cse/antares-id/Capstonetest/Loratest1/la`,
       {
         headers: {
           "Content-Type": "application/json;ty=4",
           Accept: "application/json",
-          "X-M2M-ORIGIN": "4016d5571c43fcd4:c826c3b6d9d885af",
+          "X-M2M-ORIGIN": process.env.ANTARES_KEY,
         },
       }
     )
