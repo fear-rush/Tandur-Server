@@ -130,28 +130,30 @@ io.on("connection", async (socket) => {
       const { ct: timestamp, con: sensorData } =
         req.body["m2m:sgn"]["m2m:nev"]["m2m:rep"]["m2m:cin"];
       const sensorDataObj = JSON.parse(sensorData);
-      console.log(req.body["m2m:sgn"]["m2m:nev"]["m2m:rep"]["m2m:cin"]["pi"]);
+      // console.log(req.body["m2m:sgn"]["m2m:nev"]["m2m:rep"]["m2m:cin"]["pi"]);
       const reqData =
         req.body["m2m:sgn"]["m2m:nev"]["m2m:rep"]["m2m:cin"]["pi"];
       const splitReqData = reqData.split("/")[2];
-      console.log(`ini split ${splitReqData}`);
+      // console.log(`ini split ${splitReqData}`);
       // const ref = db.collection("user").doc(`${users[socket.id]}`);
       // const user = await ref.get();
       // const userData = user.data();
       // io.sockets.emit("antaresdata", { timestamp, sensorDataObj });
       const userRef = db.collection("user");
-      const snapshot = await userRef.where("deviceId", "==", splitReqData).get();
-      console.log(`ini users atas ${JSON.stringify(users)}`);
+      const snapshot = await userRef
+        .where("deviceId", "==", splitReqData)
+        .get();
+      // console.log(`ini users atas ${JSON.stringify(users)}`);
       let socketId;
       if (snapshot.empty) {
         console.log("empty");
         return;
       } else {
-        snapshot.docs.map(doc => {
-          console.log(`ini users bawah ${JSON.stringify(users)}`);
+        snapshot.docs.map((doc) => {
+          // console.log(`ini users bawah ${JSON.stringify(users)}`);
           const userId = doc.data().userId;
-          socketId = Object.keys(users).find(key => users[key] === userId);
-        })
+          socketId = Object.keys(users).find((key) => users[key] === userId);
+        });
       }
       console.log(socketId);
       // console.log(`ini socket id ${socket.id}`);
@@ -177,8 +179,9 @@ io.on("connection", async (socket) => {
 
 // console.log(`ini user ${JSON.stringify(users)}`);
 
-server.listen(4000, () => {
-  console.log("listen on port 4000");
+const PORT = process.env.PORT || 4000;
+server.listen(PORT, () => {
+  console.log(`listen on port ${PORT} `);
 });
 
 app.use("/", router);
