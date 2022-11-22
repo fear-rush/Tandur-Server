@@ -38,22 +38,12 @@ app.post("/subscribe", async (req, res) => {
     const splitReqData = reqData.split("/")[2];
     const userRef = db.collection("user");
     const snapshot = await userRef.where("deviceId", "==", splitReqData).get();
-    console.log(`ini user atas ${JSON.stringify(users)}`);
     const result = snapshot.docs.map((doc) => {
       return doc.data().userId;
-      // const userId = doc.data().userId;
-      // const socketId = Object.keys(users).find((key) => users[key] === userId);
-      // const socketId = Object.keys(users).find(key => users[key].includes(userId));
-      // console.log(`user id ${userId}`);
-      // console.log(`socket id ${socketId}`);
-      // console.log(Object.keys(users)[0]);
     });
     const socketId = Object.keys(users).find(key => users[key].includes(result));
-    // console.log(`user id ${result}`);
-    // console.log(`socket id ${socketId}`);
-    // console.log(Object.keys(users)[0]);
+  
     io.to(socketId).emit("antaresdata", { timestamp, sensorDataObj });
-
     console.log(JSON.stringify(sensorDataObj));
     res.send("ack");
   } catch (err) {
@@ -64,10 +54,7 @@ app.post("/subscribe", async (req, res) => {
 });
 
 app.get("/", async (req, res) => {
-  // const ref = db.collection("user").doc("4OzxZgyOAEgdPdNKzeyPjoO8LGI2");
-  // const user = await ref.get();
-  // const userData = user.data();
-  // console.log(userData);
+
   res.send("Server Running");
 });
 
@@ -90,7 +77,6 @@ app.post("/subscribe", async (req, res) => {
         socketId = Object.keys(users).find((key) => users[key] === userId);
       });
     }
-    console.log(socketId);
     io.to(socketId).emit("antaresdata", { timestamp, sensorDataObj });
 
     console.log(JSON.stringify(sensorDataObj));
@@ -171,47 +157,12 @@ io.on("connection", async (socket) => {
     io.emit("testdalam", "halo ini dalam");
   });
 
-  // app.post("/subscribe", async (req, res) => {
-  //   try {
-  //     const { ct: timestamp, con: sensorData } =
-  //       req.body["m2m:sgn"]["m2m:nev"]["m2m:rep"]["m2m:cin"];
-  //     const sensorDataObj = JSON.parse(sensorData);
-  //     const reqData =
-  //       req.body["m2m:sgn"]["m2m:nev"]["m2m:rep"]["m2m:cin"]["pi"];
-  //     const splitReqData = reqData.split("/")[2];
-
-  //     const snapshot = await userRef
-  //       .where("deviceId", "==", splitReqData)
-  //       .get();
-  //     let socketId;
-  //     if (snapshot.empty) {
-  //       console.log("empty");
-  //       return;
-  //     } else {
-  //       snapshot.docs.map((doc) => {
-  //         const userId = doc.data().userId;
-  //         socketId = Object.keys(users).find((key) => users[key] === userId);
-  //       });
-  //     }
-  //     console.log(socketId);
-  //     io.to(socketId).emit("antaresdata", { timestamp, sensorDataObj });
-
-  //     console.log(JSON.stringify(sensorDataObj));
-  //     res.send("ack");
-  //   } catch (err) {
-  //     console.log("First connect");
-  //     console.log(err);
-  //     res.send("ack");
-  //   }
-  // });
-
   socket.on("disconnect", () => {
     console.log(`User ${users[socket.id]} disconnected`);
     delete users[socket.id];
   });
 });
 
-// console.log(`ini user ${JSON.stringify(users)}`);
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
