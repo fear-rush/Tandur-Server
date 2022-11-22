@@ -41,8 +41,10 @@ app.post("/subscribe", async (req, res) => {
     const result = snapshot.docs.map((doc) => {
       return doc.data().userId;
     });
-    const socketId = Object.keys(users).find(key => users[key].includes(result));
-  
+    const socketId = Object.keys(users).find((key) =>
+      users[key].includes(result)
+    );
+
     io.to(socketId).emit("antaresdata", { timestamp, sensorDataObj });
     console.log(JSON.stringify(sensorDataObj));
     res.send("ack");
@@ -54,7 +56,6 @@ app.post("/subscribe", async (req, res) => {
 });
 
 app.get("/", async (req, res) => {
-
   res.send("Server Running");
 });
 
@@ -77,6 +78,7 @@ app.post("/subscribe", async (req, res) => {
         socketId = Object.keys(users).find((key) => users[key] === userId);
       });
     }
+
     io.to(socketId).emit("antaresdata", { timestamp, sensorDataObj });
 
     console.log(JSON.stringify(sensorDataObj));
@@ -88,9 +90,10 @@ app.post("/subscribe", async (req, res) => {
   }
 });
 
+
 io.on("connection", async (socket) => {
   console.log(`User Connected`);
-
+  
   socket.on("login", async (userId) => {
     console.log("a user " + userId + " connected");
     users[socket.id] = userId;
@@ -98,8 +101,9 @@ io.on("connection", async (socket) => {
     const ref = db.collection("user").doc(`${users[socket.id]}`);
     const user = await ref.get();
     const userData = user.data();
+    let historicalArrayData = [];
 
-    const historicaldata = await axios
+    await axios
       .get(
         `https://platform.antares.id:8443/~/antares-cse/antares-id/Capstonetest/${userData.deviceName}?fu=1&ty=4&drt=1`,
         {
@@ -136,25 +140,39 @@ io.on("connection", async (socket) => {
         );
       })
       .then((antaresdata) => {
-        const historicdata = antaresdata.map((el) => {
-          return el.data;
+        antaresdata.map((el) => {
+          historicalArrayData.push(el.data["m2m:cin"]);
         });
-        return historicdata;
       });
 
-    const sortedData = historicaldata.sort((a, b) => {
-      if (a["m2m:cin"].ct < b["m2m:cin"].ct) {
+    const sortedData = historicalArrayData.sort((a, b) => {
+      if (a.ct < b.ct) {
         return -1;
       }
-      if (a["m2m:cin"].ct > b["m2m:cin"].ct) {
+      if (a.ct > b.ct) {
         return 1;
       }
       return 0;
     });
 
-    io.to(socket.id).emit("historicaldata", sortedData);
+    const groupByDate = sortedData.reduce((groups, sensorData) => {
+      const date = sensorData.ct.split("T")[0];
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(sensorData);
+      return groups;
+    }, {});
 
-    io.emit("testdalam", "halo ini dalam");
+    const historicalDataArrays = Object.keys(groupByDate).map((date) => {
+      return {
+        date: date,
+        sensorData: groupByDate[date],
+      };
+    });
+
+
+    io.to(socket.id).emit("historicaldata", historicalDataArrays);
   });
 
   socket.on("disconnect", () => {
@@ -162,7 +180,6 @@ io.on("connection", async (socket) => {
     delete users[socket.id];
   });
 });
-
 
 const PORT = process.env.PORT || 4000;
 server.listen(PORT, () => {
